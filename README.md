@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!--
 title: 'AWS NodeJS Example'
 description: 'This template demonstrates how to deploy a NodeJS function running on AWS Lambda using the traditional Serverless Framework.'
@@ -70,3 +71,6 @@ Which should result in response similar to the following:
     "body": "{\n  \"message\": \"Go Serverless v3.0! Your function executed successfully!\",\n  \"input\": \"\"\n}"
 }
 ```
+=======
+# prueba-backend
+>>>>>>> a4be2981953354a85032c8443c4895045f006d5c
