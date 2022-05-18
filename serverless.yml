@@ -1,0 +1,15 @@
+service: prueba-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  solution:
+    handler: handler.solution
+    events:
+      - http:
+          path: /
+          method: post
