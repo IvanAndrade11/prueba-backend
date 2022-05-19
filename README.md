@@ -97,12 +97,12 @@ $ sls deploy
 
 - En nuestro método asíncrono, recibimos el _evento_ y lo convertimos a formato JSON.
 ```javascript
-	const data = JSON.parse(event.body);
+const data = JSON.parse(event.body);
 ```
 
 - Definimos las variables que serán usadas para resolver el ejercicio.
 ```javascript
-	let gruposDeAmigos = data.groups; // Asignamos el string de grupos
+    let gruposDeAmigos = data.groups; // Asignamos el string de grupos
     let nPersonas = 0; // Iniciamos con 0 la cantidad de personas presentes en todos los grupos
     let sizesBus = ''; // Aquí iremos guardando todos los posibles tamaños de x (bus que puede transportar a todos los grupos, cumpliendo con las condiciones)
     let capacidad = 0; // Iniciamos con 0 la capacidad mínima de pasajeros por bus
@@ -110,13 +110,13 @@ $ sls deploy
 
 - Recorremos con un ciclo **for** el string de los grupos de amigos para hallar y guardar la _cantidad total de personas presentes en todos los grupos_ y la _capacidad mínima_ que puede tener un bus.
 ```javascript
-for(let grupo of gruposDeAmigos) {
-	if (grupo !== ',' && !isNaN(grupo)){ // Validamos que el grupo no sea una coma y qie sea un número
-		grupo = parseInt(grupo); // Convertimos el grupo a número
-		nPersonas += grupo; // Vamos contando las personas grupo por grupo
-		capacidad = grupo > capacidad ? grupo : capacidad; // Con un ternario aumentamos la capacidad mínima que puede tener un bus
-	}
-}
+    for(let grupo of gruposDeAmigos) {
+        if (grupo !== ',' && !isNaN(grupo)){ // Validamos que el grupo no sea una coma y qie sea un número
+            grupo = parseInt(grupo); // Convertimos el grupo a número
+            nPersonas += grupo; // Vamos contando las personas grupo por grupo
+            capacidad = grupo > capacidad ? grupo : capacidad; // Con un ternario aumentamos la capacidad mínima que puede tener un bus
+        }
+    }
 ```
 
 - Iteramos con un ciclo **while** la _cantidad de personas encontrada en todos los grupos_, iniciando desde la _capacidad mínima_ de un bus. En cada iteración **validamos que el residuo de la división entre el total de personas y la capacidad mínima sea igual a cero** ya que, de no ser así, una o más personas no podrían ir sentadas.
