@@ -24,7 +24,9 @@ module.exports.solution = async (event) => {
     return {
         statusCode: 200,
         body: JSON.stringify(
-            { sizes: sizesBus.slice(0, -1) },
+            { 
+                sizes: sizesBus.slice(0, -1) 
+            },
             null,
             2
         ),

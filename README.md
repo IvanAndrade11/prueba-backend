@@ -1,35 +1,22 @@
 ## Prueba Desarrollador BackEnd 
 
-![](https://via.placeholder.com/336x35/1387ae/fff?text=Banco+de+Occidente)
-
----
-
 ### Descripción
----
-Se plantea desarrollar una solución a un problema lógico, el cuál debe implementar una función **AWS Lambda** en _Java_ o _Node JS_. Esta debe exponerse como **API REST** a través  del servicio **AWS API GATEWAY**.
+
+Se plantea desarrollar una solución a un problema lógico, el cuál debe implementar una función **AWS Lambda** en _Java_ o _Node JS_. Esta debe exponerse como **API REST** a través del servicio **AWS API GATEWAY**.
 
 ### Problema a resolver
----
->Hay _**n**_ grupos de amigos y cada grupo es numerado del **1** al _**n**_. EL _**ith**_ grupo contiene _**ai**_ personas.
 
+>Hay _**n**_ grupos de amigos y cada grupo es numerado del **1** al _**n**_. EL _**ith**_ grupo contiene _**ai**_ personas.
+>
 >Todos viven cerca de una parada de bus, y solo un bus funciona en esa ruta. EL bus vacío llega a la parada y todos los grupos quieren viajar en el bus. 
 >Sin embargo, cada grupo de amigos no quiere separarse. Así que entran al bus solo si el bus puede llevar todo el grupo.
 >
->Además, los grupos no quieren cambiar su posición relativa mientras viajan. En otras palabras, el grupo 3 no puede viajar en el bus, a menos que el grupo 1 y el 2 ya hayan viajado, adicionalmente es necesario que todos estén sentados dentro del autobús en este momento, lo que quiere decir que un bus de capacidad _**x**_ solo puede transportar _**x**_ personas simultaneamente.
+>Además, los grupos no quieren cambiar su posición relativa mientras viajan. En otras palabras, el grupo 3 no puede viajar en el bus, a menos que el grupo 1 y el 2 ya hayan viajado, adicionalmente es necesario que todos estén sentados dentro del autobús en este momento, lo que quiere decir que un bus de capacidad _**x**_ solo puede transportar _**x**_ personas simultáneamente.
 >
 >Encuentre todos los posibles tamaños de _**x**_ del bus para que pueda transportar a todos los grupos, cumpliendo con las condiciones anteriores, y cada vez que el bus salga de la estación, no haya sillas vacías en el bus (es decir, el número total de personas presentes dentro del bus es igual a _**x**_).
 
-### Arquitectura
----
-| ![Data](https://ps.w.org/amazon-polly/assets/icon-256x256.png?rev=2183954) | ![Data](https://images.opencollective.com/goserverless/93e050b/logo/256.png) |
-| ---      | ---       |
-| **Lambda:** prueba-backend-dev-solution | Deployment con **Serverless Framework** |
-| **API Gateway:** dev-prueba-backend |
-
-**Punto de enlace de API:** https://rrhgs3xba1.execute-api.us-east-1.amazonaws.com/dev/
-
 ### Examples
----
+
 #### Request
 ```
 {
@@ -44,14 +31,23 @@ Se plantea desarrollar una solución a un problema lógico, el cuál debe implem
 ```
 
 ### Desarrollo de la solución
----
+
+#### Arquitectura
+
+| ![Data](https://ps.w.org/amazon-polly/assets/icon-256x256.png?rev=2183954) | ![Data](https://images.opencollective.com/goserverless/93e050b/logo/256.png) |
+| ---      | ---       |
+| **Lambda:** prueba-backend-dev-solution | Deployment con **Serverless Framework** |
+| **API Gateway:** dev-prueba-backend |
+
+**Punto de enlace de API:** https://rrhgs3xba1.execute-api.us-east-1.amazonaws.com/dev/
+
 #### Aprovisionamiento
 
 - Se creó una **cuenta** en AWS personal con acceso a los servicios necesarios. 
 
 - Desde la consola de AWS se añadió un nuevo usuario de **IAM** con permisos _AdministratorAccess_ generando  el ID de clave de acceso.
 
-- Se instaló **AWS Command Line Interface** y se ejecutó el siguiente comando para configurar las credenciales de accesso AWS:
+- Se instaló **AWS Command Line Interface** y se ejecutó el siguiente comando para configurar las credenciales de acceso AWS:
 ```bash
 $ aws configure
 ```
@@ -74,16 +70,16 @@ $ serverless
 	frameworkVersion: '3'
 
 	provider:
-		name: aws
-		runtime: nodejs14.x
+	  name: aws
+	  runtime: nodejs14.x
 
 	functions:
-		solution:
-			handler: handler.solution
-			events:
-				- http:
-						path: /
-						method: post
+	  solution:
+		handler: handler.solution
+		events:
+		  - http:
+			  path: /
+			  method: post
 ```
 - Se generó el deployment de la infraestructura en **AWS** con el siguiente comando 
 ```bash
@@ -95,7 +91,57 @@ $ serverless deploy --verbose
 ```bash
 $ sls deploy
 ```
-[========]
+
+
+#### Codificación
+
+- En nuestro método asíncrono, recibimos el _evento_ y lo convertimos a formato JSON.
+```javascript
+	const data = JSON.parse(event.body);
+```
+
+- Definimos las variables que serán usadas para resolver el ejercicio.
+```javascript
+	let gruposDeAmigos = data.groups; // Asignamos el string de grupos
+    let nPersonas = 0; // Iniciamos con 0 la cantidad de personas presentes en todos los grupos
+    let sizesBus = ''; // Aquí iremos guardando todos los posibles tamaños de x (bus que puede transportar a todos los grupos, cumpliendo con las condiciones)
+    let capacidad = 0; // Iniciamos con 0 la capacidad mínima de pasajeros por bus
+```
+
+- Recorremos con un ciclo **for** el string de los grupos de amigos para hallar y guardar la _cantidad total de personas presentes en todos los grupos_ y la _capacidad mínima_ que puede tener un bus.
+```javascript
+for(let grupo of gruposDeAmigos) {
+	if (grupo !== ',' && !isNaN(grupo)){ // Validamos que el grupo no sea una coma y qie sea un número
+		grupo = parseInt(grupo); // Convertimos el grupo a número
+		nPersonas += grupo; // Vamos contando las personas grupo por grupo
+		capacidad = grupo > capacidad ? grupo : capacidad; // Con un ternario aumentamos la capacidad mínima que puede tener un bus
+	}
+}
+```
+
+- Iteramos con un ciclo **while** la _cantidad de personas encontrada en todos los grupos_, iniciando desde la _capacidad mínima_ de un bus. En cada iteración **validamos que el residuo de la división entre el total de personas y la capacidad mínima sea igual a cero** ya que, de no ser así, una o más personas no podrían ir sentadas.
+```javascript
+    while (capacidad <= nPersonas) {
+        if(( nPersonas % capacidad ) == 0){
+            sizesBus += `${capacidad},` // Vamos guardando los posibles tamaños de x (buses que cumplen las condiciones propuestas)
+        }
+        capacidad++; // Se aumenta la capacidad para proceder con la iteración del total de personas
+    }
+```
+
+- Finalmente retornamos un código de respuesta satisfactoria y una cadena de texto JSON con los tamaños de _**x**_ hallados para cumplir con el _response_.
+```javascript
+    return {
+        statusCode: 200,
+        body: JSON.stringify(
+            { 
+                sizes: sizesBus.slice(0, -1) // Usamos slice para eliminar la última coma agregada con el ciclo while
+            },
+            null,
+            2
+        ),
+    };
+```
 
 ### Autor
 
