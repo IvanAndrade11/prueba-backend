@@ -1,10 +1,10 @@
-## Prueba Desarrollador BackEnd 
+# Prueba Desarrollador BackEnd 
 
-### Descripción
+## Descripción
 
 Se plantea desarrollar una solución a un problema lógico, el cuál debe implementar una función **AWS Lambda** en _Java_ o _Node JS_. Esta debe exponerse como **API REST** a través del servicio **AWS API GATEWAY**.
 
-### Problema a resolver
+## Problema a resolver
 
 >Hay _**n**_ grupos de amigos y cada grupo es numerado del **1** al _**n**_. EL _**ith**_ grupo contiene _**ai**_ personas.
 >
@@ -15,24 +15,24 @@ Se plantea desarrollar una solución a un problema lógico, el cuál debe implem
 >
 >Encuentre todos los posibles tamaños de _**x**_ del bus para que pueda transportar a todos los grupos, cumpliendo con las condiciones anteriores, y cada vez que el bus salga de la estación, no haya sillas vacías en el bus (es decir, el número total de personas presentes dentro del bus es igual a _**x**_).
 
-### Examples
+## Examples
 
-#### Request
+### Request
 ```
 {
     "groups" : "1,2,1,1,1,2,1,3"
 }
 ```
-#### Response
+### Response
 ```
 {
     "sizes" : "3,4,6,12"
 }
 ```
 
-### Desarrollo de la solución
+## Desarrollo de la solución
 
-#### Arquitectura
+### Arquitectura
 
 | ![Data](https://ps.w.org/amazon-polly/assets/icon-256x256.png?rev=2183954) | ![Data](https://images.opencollective.com/goserverless/93e050b/logo/256.png) |
 | ---      | ---       |
@@ -41,7 +41,7 @@ Se plantea desarrollar una solución a un problema lógico, el cuál debe implem
 
 **Punto de enlace de API:** https://rrhgs3xba1.execute-api.us-east-1.amazonaws.com/dev/
 
-#### Aprovisionamiento
+### Aprovisionamiento
 
 - Se creó una **cuenta** en AWS personal con acceso a los servicios necesarios. 
 
@@ -92,12 +92,79 @@ $ serverless deploy --verbose
 $ sls deploy
 ```
 
-
-#### Codificación
+### Codificación v2.0
 
 - En nuestro método asíncrono, recibimos el _evento_ y lo convertimos a formato JSON.
 ```javascript
-const data = JSON.parse(event.body);
+    const data = JSON.parse(event.body);
+```
+
+- Definimos las variables que serán usadas para resolver el ejercicio.
+```javascript
+    let sizesX = []; //Array donde guardaremos los posibles valores de x
+    let xMin = 0; // Definimos la capacidad minima inicial de un bus
+```
+
+- Iniciamos un bloque try-catch y convertimos el string _groups_ recibido en el _evento_ en un _array_ de grupos.
+```javascript
+    try {
+        const grupos = data.groups.split(",");
+```
+
+- Aplicamos _reduce_ al array de grupos para retornar a la varialbe _nPersonas_ el total de personas.
+```javascript
+        const nPersonas = grupos.reduce((acc, cur) => {
+            xMin = xMin > parseInt(cur) ? xMin : parseInt(cur); // Con un ternario guardamos la capacidad mínima
+            return parseInt(acc) + parseInt(cur); // Retornamos la suma de todos los grupos
+        }, 0); // Definímos 0 como índice inicial
+```
+
+- Lanzamos una excepción si no encontramos los datos necesarios para continuar.
+```javascript
+        if(isNaN(xMin) || isNaN(nPersonas)){
+            throw "Bad Request";
+        } 
+```
+
+- Iteramos con un ciclo **while** la variable _nPersonas_, iniciando desde _xMin_. En cada iteración revisamos si xMin es un valor posible de _**x**_.
+```javascript
+        while (xMin <= nPersonas) {
+            (nPersonas % xMin) == 0 && sizesX.push(xMin); // Si el residuo entre nPersonas y xMin es igual a cero, lo guardamos en el array sizesX
+            xMin++;
+        }
+```
+
+- Si hubo alguna excepción lanzada en el bloque try, la retornamos desde la función **response()**.
+```javascript
+    } catch (error) {
+        return response(400, error)
+    }
+```
+
+- Finalmente, si no hay excepciones, retornamos los tamaños de _**x**_ hallados.
+```javascript
+    return response(200, sizesX.join())
+```
+
+- Función **response()** que nos permite retornar dinámicamente el código de respuesta, los posibles tamaños de x o en su defecto, alguna excepción encontrada. 
+```javascript
+const response = (code, data) => {
+    return {
+        statusCode: code,
+        body: JSON.stringify(
+            { 
+                sizes: data
+            }
+        ),
+    };
+}
+```
+
+### Codificación v1.0
+
+- En nuestro método asíncrono, recibimos el _evento_ y lo convertimos a formato JSON.
+```javascript
+    const data = JSON.parse(event.body);
 ```
 
 - Definimos las variables que serán usadas para resolver el ejercicio.

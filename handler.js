@@ -1,34 +1,38 @@
 module.exports.solution = async (event) => {
     const data = JSON.parse(event.body);
+    let sizesX = [];
+    let xMin = 0;
     
-    let gruposDeAmigos = data.groups;
-    let nPersonas = 0;
-    let sizesBus = '';
-    let capacidad = 0;
+    try {
+        const grupos = data.groups.split(",");
 
-    for(let grupo of gruposDeAmigos) {
-        if (grupo !== ',' && !isNaN(grupo)){
-            grupo = parseInt(grupo);
-            nPersonas += grupo;
-            capacidad = grupo > capacidad ? grupo : capacidad;
+        const nPersonas = grupos.reduce((acc, cur) => {
+            xMin = xMin > parseInt(cur) ? xMin : parseInt(cur);
+            return parseInt(acc) + parseInt(cur);
+        }, 0);
+       
+        if(isNaN(xMin) || isNaN(nPersonas)){
+            throw "Bad Request";
+        } 
+        
+        while (xMin <= nPersonas) {
+            (nPersonas % xMin) == 0 && sizesX.push(xMin);
+            xMin++;
         }
-    }
-   
-    while (capacidad <= nPersonas) {
-        if(( nPersonas % capacidad ) == 0){
-            sizesBus += `${capacidad},`
-        }
-        capacidad++;
+    } catch (error) {
+        return response(400, error)
     }
 
+    return response(200, sizesX.join())
+};
+
+const response = (code, data) => {
     return {
-        statusCode: 200,
+        statusCode: code,
         body: JSON.stringify(
             { 
-                sizes: sizesBus.slice(0, -1) 
-            },
-            null,
-            2
+                sizes: data
+            }
         ),
     };
-};
+}
