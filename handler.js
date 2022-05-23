@@ -14,16 +14,17 @@ module.exports.solution = async (event) => {
         if(isNaN(xMin) || isNaN(nPersonas)){
             throw "Bad Request";
         } 
-        
+
         while (xMin <= nPersonas) {
             (nPersonas % xMin) == 0 && sizesX.push(xMin);
             xMin++;
         }
+        
+        return response(200, sizesX.join())
     } catch (error) {
         return response(400, error)
     }
 
-    return response(200, sizesX.join())
 };
 
 const response = (code, data) => {
